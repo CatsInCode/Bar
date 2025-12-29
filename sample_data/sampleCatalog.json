@@ -1,0 +1,226 @@
+[
+  {
+    "match": "игристое",
+    "title": "Игристое вино (брют)",
+    "section": "alcohol",
+    "purchaseUnitLabel": "бут.",
+    "packSize": 1,
+    "packUnit": "pcs",
+    "brandsNote": "Шато Тамань, Абрау Дюрсо",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "джин",
+    "title": "Джин сухой",
+    "section": "alcohol",
+    "purchaseUnitLabel": "л.",
+    "packSize": 1,
+    "packUnit": "l",
+    "brandsNote": "Hoppers Original, Gintl, Lockwood, Southbank London, Beefeater, Gordon’s",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "ром светлый",
+    "title": "Ром светлый",
+    "section": "alcohol",
+    "purchaseUnitLabel": "л.",
+    "packSize": 1,
+    "packUnit": "l",
+    "brandsNote": "Takamaka Blanc, Old Captain Caribbean Rum, Armator White, Old Nick White, Barcelo Blanco",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "ром золотой",
+    "title": "Ром золотой",
+    "section": "alcohol",
+    "purchaseUnitLabel": "л.",
+    "packSize": 1,
+    "packUnit": "l",
+    "brandsNote": "Barcelo Dorado, Armator Gold",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "водка",
+    "title": "Водка классик",
+    "section": "alcohol",
+    "purchaseUnitLabel": "л.",
+    "packSize": 1,
+    "packUnit": "l",
+    "brandsNote": "Царская, Русский Стандарт",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "текила",
+    "title": "Текила серебряная",
+    "section": "alcohol",
+    "purchaseUnitLabel": "л.",
+    "packSize": 1,
+    "packUnit": "l",
+    "brandsNote": "Ольмека Текила Силвер, Espolon Blanco",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "трипл сек",
+    "title": "Ликёр Трипл Сек",
+    "section": "alcohol",
+    "purchaseUnitLabel": "л.",
+    "packSize": 0.7,
+    "packUnit": "l",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "апероль",
+    "title": "Ликёр Апероль",
+    "section": "alcohol",
+    "purchaseUnitLabel": "л.",
+    "packSize": 1,
+    "packUnit": "l",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "пюре апельсина",
+    "title": "Пюре апельсина (1 кг.)",
+    "section": "ingredients",
+    "purchaseUnitLabel": "бут.",
+    "packSize": 1,
+    "packUnit": "pcs",
+    "url": "https://ozon.ru/t/sYCmpw7",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "пюре маракуйя",
+    "title": "Пюре маракуйя (1 кг.)",
+    "section": "ingredients",
+    "purchaseUnitLabel": "бут.",
+    "packSize": 1,
+    "packUnit": "pcs",
+    "url": "https://ozon.ru/t/7i8uW81",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "сироп сахарный",
+    "title": "Сироп сахарный (1 л.)",
+    "section": "ingredients",
+    "purchaseUnitLabel": "бут.",
+    "packSize": 1,
+    "packUnit": "pcs",
+    "url": "https://ozon.ru/t/NILgx5U",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "сироп манго",
+    "title": "Сироп манго (330 мл.)",
+    "section": "ingredients",
+    "purchaseUnitLabel": "бут.",
+    "packSize": 1,
+    "packUnit": "pcs",
+    "url": "https://ozon.ru/t/LtIZeM2",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "сироп клубнич",
+    "title": "Сироп клубничный (1 л.)",
+    "section": "ingredients",
+    "purchaseUnitLabel": "бут.",
+    "packSize": 1,
+    "packUnit": "pcs",
+    "url": "https://ozon.ru/t/A04ab6Z",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "сок лимона",
+    "title": "Сок лимона (1 л.)",
+    "section": "ingredients",
+    "purchaseUnitLabel": "бут.",
+    "packSize": 1,
+    "packUnit": "pcs",
+    "url": "https://ozon.ru/t/balWOb3",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "газированная вода",
+    "title": "Газированная вода «Святой Источник» (1,5 л.)",
+    "section": "soft",
+    "purchaseUnitLabel": "бут.",
+    "packSize": 1,
+    "packUnit": "pcs",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "кола классик",
+    "title": "Кола классик",
+    "section": "soft",
+    "purchaseUnitLabel": "л.",
+    "packSize": 1,
+    "packUnit": "l",
+    "brandsNote": "Добрый, Evervess",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "кола зеро",
+    "title": "Кола зеро",
+    "section": "soft",
+    "purchaseUnitLabel": "л.",
+    "packSize": 1,
+    "packUnit": "l",
+    "brandsNote": "Добрый, Evervess",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "лайм",
+    "title": "Лайм",
+    "section": "fruits",
+    "purchaseUnitLabel": "шт.",
+    "packSize": 1,
+    "packUnit": "pcs",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "лимон",
+    "title": "Лимон",
+    "section": "fruits",
+    "purchaseUnitLabel": "шт.",
+    "packSize": 1,
+    "packUnit": "pcs",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "апельсин",
+    "title": "Апельсин",
+    "section": "fruits",
+    "purchaseUnitLabel": "шт.",
+    "packSize": 1,
+    "packUnit": "pcs",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  },
+  {
+    "match": "мята",
+    "title": "Мята свежая",
+    "section": "fruits",
+    "purchaseUnitLabel": "гр.",
+    "packSize": 0,
+    "packUnit": "g",
+    "createdAt": 1767046144786,
+    "updatedAt": 1767046144786
+  }
+]
