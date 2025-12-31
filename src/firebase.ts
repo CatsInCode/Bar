@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
+import { logDbEvent } from "./lib/logger";
 
 /**
  * Можно вынести в .env, но оставил значения по умолчанию, чтобы проект запускался сразу.
@@ -19,3 +20,15 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
+
+logDbEvent({
+  scope: "db",
+  action: "firebase:init",
+  status: "info",
+  mode: "firebase",
+  details: {
+    projectId: firebaseConfig.projectId,
+    databaseURL: firebaseConfig.databaseURL,
+    authDomain: firebaseConfig.authDomain,
+  },
+});
