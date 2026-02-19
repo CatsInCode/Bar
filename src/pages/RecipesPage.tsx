@@ -31,6 +31,8 @@ export default function RecipesPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Recipe | null>(null);
   const [draft, setDraft] = useState<Omit<Recipe, "id">>(emptyRecipe());
+  const [tagsInput, setTagsInput] = useState("");
+  const [qtyInputById, setQtyInputById] = useState<Record<string, string>>({});
 
   const filtered = useMemo(() => {
     const qq = q.trim().toLowerCase();
@@ -42,19 +44,30 @@ export default function RecipesPage() {
   function openCreate() {
     setEditing(null);
     setDraft(emptyRecipe());
+    setTagsInput("");
+    setQtyInputById({});
     setOpen(true);
   }
 
   function openEdit(r: Recipe) {
     setEditing(r);
-    const { id: _id, ingredients, ...next } = r;
-    setDraft({ ...next, ingredients: normalizeIngredients(ingredients) });
+    const { id: _id, ingredients, tags, ...next } = r;
+    const normalizedIngredients = normalizeIngredients(ingredients);
+    setDraft({ ...next, tags, ingredients: normalizedIngredients });
+    setTagsInput((tags ?? []).join(", "));
+    setQtyInputById(Object.fromEntries(normalizedIngredients.map((item) => [item.id, String(item.qty)])));
     setOpen(true);
   }
 
   async function save() {
     const ts = nowTs();
-    const data = { ...draft, name: draft.name.trim(), ingredients: normalizeIngredients(draft.ingredients), updatedAt: ts };
+    const data = {
+      ...draft,
+      name: draft.name.trim(),
+      tags: tagsInput.split(",").map((x) => x.trim()).filter(Boolean),
+      ingredients: normalizeIngredients(draft.ingredients),
+      updatedAt: ts,
+    };
     if (!data.name) return alert("Название рецепта обязательно.");
     if (editing) {
       await updateAt(`/recipes/${editing.id}`, data);
@@ -72,6 +85,7 @@ export default function RecipesPage() {
   function addIngredient() {
     const ing: RecipeIngredient = { id: nanoid(), name: "", qty: 0, unit: "l", optional: false };
     setDraft((d) => ({ ...d, ingredients: [...(d.ingredients ?? []), ing] }));
+    setQtyInputById((prev) => ({ ...prev, [ing.id]: "0" }));
   }
 
   function updateIngredient(id: string, patch: Partial<RecipeIngredient>) {
@@ -83,6 +97,18 @@ export default function RecipesPage() {
 
   function removeIngredient(id: string) {
     setDraft((d) => ({ ...d, ingredients: (d.ingredients ?? []).filter((x) => x.id !== id) }));
+    setQtyInputById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
+  function onQtyInputChange(id: string, raw: string) {
+    if (!/^[0-9]*([.,][0-9]*)?$/.test(raw)) return;
+    setQtyInputById((prev) => ({ ...prev, [id]: raw }));
+    if (raw === "" || raw.endsWith(".") || raw.endsWith(",")) return;
+    updateIngredient(id, { qty: Number(raw.replace(",", ".")) || 0 });
   }
 
   return (
@@ -188,8 +214,8 @@ export default function RecipesPage() {
             <div className="label">Теги (через запятую)</div>
             <input
               className="input"
-              value={(draft.tags ?? []).join(", ")}
-              onChange={(e) => setDraft((d) => ({ ...d, tags: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) }))}
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
               placeholder="классика, шот, лимонадник..."
             />
           </div>
@@ -218,7 +244,7 @@ export default function RecipesPage() {
               </div>
               <div>
                 <div className="label">qty</div>
-                <input className="input" inputMode="decimal" value={String(i.qty)} onChange={(e) => updateIngredient(i.id, { qty: Number(e.target.value.replace(",", ".")) || 0 })} />
+                <input className="input" inputMode="decimal" value={qtyInputById[i.id] ?? String(i.qty)} onChange={(e) => onQtyInputChange(i.id, e.target.value)} />
               </div>
               <div>
                 <div className="label">unit</div>
