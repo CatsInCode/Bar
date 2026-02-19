@@ -4,7 +4,7 @@ import Modal from "../components/Modal";
 import { createAt, removeAt, updateAt } from "../lib/db";
 import { useList } from "../lib/hooks";
 import { nowTs } from "../lib/utils";
-import { Recipe, RecipeIngredient } from "../types";
+import { CATALOG_SECTIONS, Recipe, RecipeIngredient } from "../types";
 import { nanoid } from "nanoid";
 
 function emptyRecipe(): Omit<Recipe, "id"> {
@@ -83,7 +83,7 @@ export default function RecipesPage() {
   }
 
   function addIngredient() {
-    const ing: RecipeIngredient = { id: nanoid(), name: "", qty: 0, unit: "l", optional: false };
+    const ing: RecipeIngredient = { id: nanoid(), name: "", qty: 0, unit: "l", optional: false, section: "ingredients", shoppingTitle: "", purchaseUnitLabel: "", packSize: 0, brandsNote: "", url: "" };
     setDraft((d) => ({ ...d, ingredients: [...(d.ingredients ?? []), ing] }));
     setQtyInputById((prev) => ({ ...prev, [ing.id]: "0" }));
   }
@@ -237,33 +237,66 @@ export default function RecipesPage() {
 
         <div className="mt-3 grid gap-2">
           {(draft.ingredients ?? []).map((i) => (
-            <div key={i.id} className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-3 md:grid-cols-[1fr_120px_90px_110px_auto] md:items-end">
-              <div>
-                <div className="label">Ингредиент</div>
-                <input className="input" value={i.name} onChange={(e) => updateIngredient(i.id, { name: e.target.value })} placeholder="Например: Джин сухой" />
+            <div key={i.id} className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-3">
+              <div className="grid gap-2 md:grid-cols-[1fr_120px_90px_140px_auto] md:items-end">
+                <div>
+                  <div className="label">Ингредиент</div>
+                  <input className="input" value={i.name} onChange={(e) => updateIngredient(i.id, { name: e.target.value })} placeholder="Например: Джин сухой" />
+                </div>
+                <div>
+                  <div className="label">qty</div>
+                  <input className="input" inputMode="decimal" value={qtyInputById[i.id] ?? String(i.qty)} onChange={(e) => onQtyInputChange(i.id, e.target.value)} />
+                </div>
+                <div>
+                  <div className="label">unit</div>
+                  <select className="input" value={i.unit} onChange={(e) => updateIngredient(i.id, { unit: e.target.value as any })}>
+                    <option value="l">l</option>
+                    <option value="kg">kg</option>
+                    <option value="pcs">pcs</option>
+                    <option value="ml">ml</option>
+                    <option value="g">g</option>
+                    <option value="unit">unit</option>
+                  </select>
+                </div>
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" checked={!!i.optional} onChange={(e) => updateIngredient(i.id, { optional: e.target.checked })} />
+                  опционально
+                </label>
+                <button className="btn-secondary" onClick={() => removeIngredient(i.id)}>
+                  Удалить
+                </button>
               </div>
-              <div>
-                <div className="label">qty</div>
-                <input className="input" inputMode="decimal" value={qtyInputById[i.id] ?? String(i.qty)} onChange={(e) => onQtyInputChange(i.id, e.target.value)} />
+
+              <div className="grid gap-2 md:grid-cols-2">
+                <div>
+                  <div className="label">Категория закупки</div>
+                  <select className="input" value={i.section ?? "ingredients"} onChange={(e) => updateIngredient(i.id, { section: e.target.value as any })}>
+                    {CATALOG_SECTIONS.map((s) => (
+                      <option key={s.key} value={s.key}>{s.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <div className="label">Название в списке закупки</div>
+                  <input className="input" value={i.shoppingTitle ?? ""} onChange={(e) => updateIngredient(i.id, { shoppingTitle: e.target.value })} placeholder="Если пусто — возьмется имя ингредиента" />
+                </div>
+                <div>
+                  <div className="label">Единица закупки (бут., шт., пачка...)</div>
+                  <input className="input" value={i.purchaseUnitLabel ?? ""} onChange={(e) => updateIngredient(i.id, { purchaseUnitLabel: e.target.value })} placeholder="Если пусто — по unit" />
+                </div>
+                <div>
+                  <div className="label">Округление packSize (0 = нет)</div>
+                  <input className="input" inputMode="decimal" value={String(i.packSize ?? 0)} onChange={(e) => updateIngredient(i.id, { packSize: Number(e.target.value.replace(",", ".")) || 0 })} />
+                </div>
+                <div>
+                  <div className="label">Марки/бренды (курсивом)</div>
+                  <input className="input" value={i.brandsNote ?? ""} onChange={(e) => updateIngredient(i.id, { brandsNote: e.target.value })} />
+                </div>
+                <div>
+                  <div className="label">Ссылка на товар</div>
+                  <input className="input" value={i.url ?? ""} onChange={(e) => updateIngredient(i.id, { url: e.target.value })} placeholder="https://..." />
+                </div>
               </div>
-              <div>
-                <div className="label">unit</div>
-                <select className="input" value={i.unit} onChange={(e) => updateIngredient(i.id, { unit: e.target.value as any })}>
-                  <option value="l">l</option>
-                  <option value="kg">kg</option>
-                  <option value="pcs">pcs</option>
-                  <option value="ml">ml</option>
-                  <option value="g">g</option>
-                  <option value="unit">unit</option>
-                </select>
-              </div>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" checked={!!i.optional} onChange={(e) => updateIngredient(i.id, { optional: e.target.checked })} />
-                опционально
-              </label>
-              <button className="btn-secondary" onClick={() => removeIngredient(i.id)}>
-                Удалить
-              </button>
             </div>
           ))}
           {!draft.ingredients?.length ? <div className="text-sm text-slate-500">Пока пусто. Добавь ингредиенты.</div> : null}
