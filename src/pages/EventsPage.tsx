@@ -5,7 +5,7 @@ import { createAt, removeAt, updateAt } from "../lib/db";
 import { useList } from "../lib/hooks";
 import { nowTs, safeNumber } from "../lib/utils";
 import { buildWhatsAppShoppingText } from "../lib/whatsapp";
-import { CatalogItem, Event, Recipe } from "../types";
+import { Event, Recipe } from "../types";
 
 function emptyEvent(): Omit<Event, "id"> {
   const ts = nowTs();
@@ -31,7 +31,6 @@ function emptyEvent(): Omit<Event, "id"> {
 export default function EventsPage() {
   const { items: events } = useList<Event>("/events");
   const { items: recipes } = useList<Recipe>("/recipes");
-  const { items: catalog } = useList<CatalogItem>("/catalog");
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Event | null>(null);
@@ -104,8 +103,8 @@ export default function EventsPage() {
 
   const previewText = useMemo(() => {
     if (!previewEvent) return "";
-    return buildWhatsAppShoppingText({ event: previewEvent, recipes, catalog, includeOptional: true });
-  }, [previewEvent, recipes, catalog]);
+    return buildWhatsAppShoppingText({ event: previewEvent, recipes, includeOptional: true });
+  }, [previewEvent, recipes]);
 
   const selectedRecipeIds = useMemo(() => new Set((draft.recipes ?? []).map((line) => line.recipeId)), [draft.recipes]);
   const recipeSuggestions = useMemo(() => {
@@ -355,7 +354,7 @@ export default function EventsPage() {
         footer={
           <div className="flex items-center justify-between gap-3">
             <div className="text-xs text-slate-500">
-              Если формат «не как надо» — добавь/отредактируй позиции в «Каталог закупки» (названия, секции, ссылки, округления).
+              Список собирается напрямую из ингредиентов рецептов, добавь ручные позиции ниже при необходимости.
             </div>
             <div className="flex gap-2">
               <button className="btn-secondary" onClick={() => setPreviewOpen(false)}>
