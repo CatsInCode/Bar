@@ -12,6 +12,19 @@ function emptyRecipe(): Omit<Recipe, "id"> {
   return { name: "", glass: "", method: "", notes: "", tags: [], ingredients: [], createdAt: ts, updatedAt: ts };
 }
 
+function normalizeIngredients(items: RecipeIngredient[] | undefined): RecipeIngredient[] {
+  const used = new Set<string>();
+  return (items ?? []).map((item) => {
+    const baseId = typeof item.id === "string" ? item.id : "";
+    let id = baseId.trim();
+    if (!id || used.has(id)) {
+      id = nanoid();
+    }
+    used.add(id);
+    return { ...item, id };
+  });
+}
+
 export default function RecipesPage() {
   const { items: recipes } = useList<Recipe>("/recipes");
   const [q, setQ] = useState("");
@@ -34,14 +47,14 @@ export default function RecipesPage() {
 
   function openEdit(r: Recipe) {
     setEditing(r);
-    const { id: _id, ...next } = r;
-    setDraft(next);
+    const { id: _id, ingredients, ...next } = r;
+    setDraft({ ...next, ingredients: normalizeIngredients(ingredients) });
     setOpen(true);
   }
 
   async function save() {
     const ts = nowTs();
-    const data = { ...draft, name: draft.name.trim(), updatedAt: ts };
+    const data = { ...draft, name: draft.name.trim(), ingredients: normalizeIngredients(draft.ingredients), updatedAt: ts };
     if (!data.name) return alert("Название рецепта обязательно.");
     if (editing) {
       await updateAt(`/recipes/${editing.id}`, data);
