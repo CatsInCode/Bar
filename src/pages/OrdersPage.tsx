@@ -67,7 +67,8 @@ export default function OrdersPage() {
   }
   function openEdit(o: Order) {
     setEditing(o);
-    setDraft({ ...o, id: undefined } as any);
+    const { id: _id, ...next } = o;
+    setDraft(next);
     setOpen(true);
   }
 

@@ -34,7 +34,8 @@ export default function RecipesPage() {
 
   function openEdit(r: Recipe) {
     setEditing(r);
-    setDraft({ ...r, id: undefined } as any);
+    const { id: _id, ...next } = r;
+    setDraft(next);
     setOpen(true);
   }
 

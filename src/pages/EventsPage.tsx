@@ -55,7 +55,8 @@ export default function EventsPage() {
   }
   function openEdit(e: Event) {
     setEditing(e);
-    setDraft({ ...e, id: undefined } as any);
+    const { id: _id, ...next } = e;
+    setDraft(next);
     setRecipeQuery("");
     setOpen(true);
   }
