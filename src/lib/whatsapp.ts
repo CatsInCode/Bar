@@ -44,9 +44,11 @@ export function buildWhatsAppShoppingText(args: {
   recipes: Recipe[];
   catalog: CatalogItem[];
   includeOptional?: boolean;
+  includeEventMeta?: boolean;
 }) {
   const { event, recipes, catalog } = args;
   const includeOptional = args.includeOptional ?? true;
+  const includeEventMeta = args.includeEventMeta ?? false;
 
   // (1) соберём подробный список ингредиентов с именами
   const byId = new Map(recipes.map((r) => [r.id, r]));
@@ -107,29 +109,29 @@ export function buildWhatsAppShoppingText(args: {
   lines.push("*❗️СПИСОК ЗАКУПКИ❗️*");
   lines.push("");
 
-  for (const sec of CATALOG_SECTIONS.sort((a, b) => a.order - b.order)) {
-  const items = sections[sec.key];
-  const manual = (event.manualBySection as any)?.[sec.key] as string | undefined;
-  if (!items?.length && !manual?.trim()) continue;
+  for (const sec of CATALOG_SECTIONS.slice().sort((a, b) => a.order - b.order)) {
+    const items = sections[sec.key];
+    const manual = (event.manualBySection as any)?.[sec.key] as string | undefined;
+    if (!items?.length && !manual?.trim()) continue;
 
-  lines.push(`*${sec.title}:*`);
-  for (const it of items ?? []) {
-    const note = it.c.brandsNote ? ` (_${it.c.brandsNote}_)` : "";
-    const url = it.c.url ? ` —> ${it.c.url}` : "";
-    lines.push(`- *${it.c.title}* - *${it.displayQty}*${note}${url}`);
+    lines.push(`*${sec.title}:*`);
+    for (const it of items ?? []) {
+      const note = it.c.brandsNote ? ` (_${it.c.brandsNote}_)` : "";
+      const url = it.c.url ? ` —> ${it.c.url}` : "";
+      lines.push(`- *${it.c.title}* - *${it.displayQty}*${note}${url}`);
+    }
+
+    if (manual?.trim()) {
+      // manual строки вставляем как есть (чтобы сохранить форматирование WhatsApp)
+      manual
+        .split(/\r?\n/)
+        .map((x) => x.trimEnd())
+        .filter((x) => x.length > 0)
+        .forEach((x) => lines.push(x));
+    }
+
+    lines.push("");
   }
-
-  if (manual?.trim()) {
-    // manual строки вставляем как есть (чтобы сохранить форматирование WhatsApp)
-    manual
-      .split(/\r?\n/)
-      .map((x) => x.trimEnd())
-      .filter((x) => x.length > 0)
-      .forEach((x) => lines.push(x));
-  }
-
-  lines.push("");
-}
 
 
   // Fallback: если по каталогу ничего не заматчилось — покажем сырые ингредиенты
@@ -148,12 +150,14 @@ export function buildWhatsAppShoppingText(args: {
     lines.push("_Подсказка: добавь позиции в «Каталог закупки», и формат станет как в примере._");
   }
 
-  // Мини-шапка с ссылкой на мероприятие (для заказа) — по желанию
-  lines.push(`*Мероприятие:* ${event.title}`);
-  if (event.dateISO) lines.push(`*Дата:* ${event.dateISO}`);
-  if (event.loftName) lines.push(`*Лофт:* ${event.loftName}`);
-  if (event.clientName) lines.push(`*Клиент:* ${event.clientName}`);
-  if (event.clientPhone) lines.push(`*Тел:* ${event.clientPhone}`);
+  if (includeEventMeta) {
+    // Опционально добавляем данные мероприятия внизу, но в WhatsApp-шаблон по умолчанию не включаем.
+    lines.push(`*Мероприятие:* ${event.title}`);
+    if (event.dateISO) lines.push(`*Дата:* ${event.dateISO}`);
+    if (event.loftName) lines.push(`*Лофт:* ${event.loftName}`);
+    if (event.clientName) lines.push(`*Клиент:* ${event.clientName}`);
+    if (event.clientPhone) lines.push(`*Тел:* ${event.clientPhone}`);
+  }
 
   return lines.join("\n").trim() + "\n";
 }
