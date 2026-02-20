@@ -27,19 +27,18 @@ export default function Layout({ children }: { children: ReactNode }) {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-lg font-extrabold text-slate-900">Barmen</div>
-                <div className="text-xs text-slate-500">мероприятия • рецепты • закупка</div>
+                <div className="text-xs text-slate-500">мероприятия • рецепты • заказы</div>
               </div>
             </div>
             <div className="mt-4 space-y-1">
               <Item to="/orders">Заказы</Item>
               <Item to="/events">Мероприятия</Item>
               <Item to="/recipes">Рецепты</Item>
-              <Item to="/catalog">Каталог закупки</Item>
             </div>
             <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3">
               <div className="text-xs font-semibold text-slate-700">Подсказка</div>
               <div className="mt-1 text-xs text-slate-600">
-                Сначала импортируй/создай рецепты → собери мероприятие → добавь позиции в «Каталог закупки» → получи WhatsApp-текст.
+                Сначала импортируй/создай рецепты → собери мероприятие → получи WhatsApp-список закупки по ингредиентам.
               </div>
             </div>
           </aside>

@@ -5,7 +5,7 @@ import { createAt, removeAt, updateAt } from "../lib/db";
 import { useList } from "../lib/hooks";
 import { nowTs, safeNumber } from "../lib/utils";
 import { buildWhatsAppShoppingText } from "../lib/whatsapp";
-import { CatalogItem, Event, Recipe } from "../types";
+import { Event, Recipe } from "../types";
 
 function emptyEvent(): Omit<Event, "id"> {
   const ts = nowTs();
@@ -31,11 +31,11 @@ function emptyEvent(): Omit<Event, "id"> {
 export default function EventsPage() {
   const { items: events } = useList<Event>("/events");
   const { items: recipes } = useList<Recipe>("/recipes");
-  const { items: catalog } = useList<CatalogItem>("/catalog");
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Event | null>(null);
   const [draft, setDraft] = useState<Omit<Event, "id">>(emptyEvent());
+  const [recipeQuery, setRecipeQuery] = useState("");
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewEvent, setPreviewEvent] = useState<Event | null>(null);
@@ -49,11 +49,14 @@ export default function EventsPage() {
   function openCreate() {
     setEditing(null);
     setDraft(emptyEvent());
+    setRecipeQuery("");
     setOpen(true);
   }
   function openEdit(e: Event) {
     setEditing(e);
-    setDraft({ ...e, id: undefined } as any);
+    const { id: _id, ...next } = e;
+    setDraft(next);
+    setRecipeQuery("");
     setOpen(true);
   }
 
@@ -74,12 +77,16 @@ export default function EventsPage() {
     await removeAt(`/events/${e.id}`);
   }
 
-  function toggleRecipe(recipeId: string) {
+  function addRecipe(recipeId: string) {
     setDraft((d) => {
       const exists = (d.recipes ?? []).find((x) => x.recipeId === recipeId);
-      if (exists) return { ...d, recipes: (d.recipes ?? []).filter((x) => x.recipeId !== recipeId) };
+      if (exists) return d;
       return { ...d, recipes: [...(d.recipes ?? []), { recipeId, portions: 1 }] };
     });
+  }
+
+  function removeRecipe(recipeId: string) {
+    setDraft((d) => ({ ...d, recipes: (d.recipes ?? []).filter((x) => x.recipeId !== recipeId) }));
   }
 
   function setPortions(recipeId: string, portions: number) {
@@ -96,8 +103,16 @@ export default function EventsPage() {
 
   const previewText = useMemo(() => {
     if (!previewEvent) return "";
-    return buildWhatsAppShoppingText({ event: previewEvent, recipes, catalog, includeOptional: true });
-  }, [previewEvent, recipes, catalog]);
+    return buildWhatsAppShoppingText({ event: previewEvent, recipes, includeOptional: true });
+  }, [previewEvent, recipes]);
+
+  const selectedRecipeIds = useMemo(() => new Set((draft.recipes ?? []).map((line) => line.recipeId)), [draft.recipes]);
+  const recipeSuggestions = useMemo(() => {
+    const query = recipeQuery.trim().toLowerCase();
+    const list = recipes.slice().sort((a, b) => a.name.localeCompare(b.name, "ru"));
+    if (!query) return list.slice(0, 8);
+    return list.filter((r) => r.name.toLowerCase().includes(query)).slice(0, 8);
+  }, [recipeQuery, recipes]);
 
   async function copyPreview() {
     await navigator.clipboard.writeText(previewText);
@@ -235,35 +250,65 @@ export default function EventsPage() {
 
         <div className="mt-5">
           <div className="text-sm font-extrabold text-slate-900">Барная карта (из рецептов)</div>
-          <div className="text-xs text-slate-500">Отметь рецепты и укажи количество порций для каждого.</div>
+          <div className="text-xs text-slate-500">Добавь рецепт вручную через поиск и укажи количество порций.</div>
+
+          <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                className="input flex-1"
+                value={recipeQuery}
+                onChange={(e) => setRecipeQuery(e.target.value)}
+                placeholder="Начни вводить название рецепта"
+              />
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  if (recipeSuggestions[0]) addRecipe(recipeSuggestions[0].id);
+                }}
+              >
+                Добавить
+              </button>
+            </div>
+            <div className="mt-2 grid gap-1 text-xs text-slate-500">
+              {recipeSuggestions.length === 0 ? (
+                <div>Ничего не найдено.</div>
+              ) : (
+                recipeSuggestions.map((r) => (
+                  <button
+                    key={r.id}
+                    className="flex items-center justify-between rounded-xl border border-transparent px-2 py-1 text-left text-sm text-slate-700 hover:border-slate-200 hover:bg-slate-50"
+                    onClick={() => addRecipe(r.id)}
+                  >
+                    <span>{r.name}</span>
+                    <span className="text-xs text-slate-400">{selectedRecipeIds.has(r.id) ? "уже в списке" : "добавить"}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
 
           <div className="mt-3 grid gap-2">
-            {recipes
-              .slice()
-              .sort((a, b) => a.name.localeCompare(b.name, "ru"))
-              .map((r) => {
-                const checked = !!(draft.recipes ?? []).find((x) => x.recipeId === r.id);
-                const portions = (draft.recipes ?? []).find((x) => x.recipeId === r.id)?.portions ?? 1;
-                return (
-                  <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white p-3">
-                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                      <input type="checkbox" checked={checked} onChange={() => toggleRecipe(r.id)} />
-                      {r.name}
-                    </label>
-                    {checked ? (
-                      <div className="flex items-center gap-2">
-                        <div className="text-xs text-slate-500">порций</div>
-                        <input
-                          className="input w-[96px]"
-                          inputMode="numeric"
-                          value={String(portions)}
-                          onChange={(e) => setPortions(r.id, safeNumber(e.target.value, 0))}
-                        />
-                      </div>
-                    ) : null}
+            {(draft.recipes ?? []).map((line) => {
+              const r = recipes.find((x) => x.id === line.recipeId);
+              return (
+                <div key={line.recipeId} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white p-3">
+                  <div className="text-sm font-semibold text-slate-800">{r?.name ?? "—"}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-xs text-slate-500">порций</div>
+                    <input
+                      className="input w-[96px]"
+                      inputMode="numeric"
+                      value={String(line.portions ?? 1)}
+                      onChange={(e) => setPortions(line.recipeId, safeNumber(e.target.value, 0))}
+                    />
+                    <button className="btn-secondary" onClick={() => removeRecipe(line.recipeId)}>
+                      Удалить
+                    </button>
                   </div>
-                );
-              })}
+                </div>
+              );
+            })}
+            {(draft.recipes ?? []).length === 0 ? <div className="text-sm text-slate-500">Рецепты не добавлены.</div> : null}
           </div>
 
 <div className="mt-5">
@@ -309,7 +354,7 @@ export default function EventsPage() {
         footer={
           <div className="flex items-center justify-between gap-3">
             <div className="text-xs text-slate-500">
-              Если формат «не как надо» — добавь/отредактируй позиции в «Каталог закупки» (названия, секции, ссылки, округления).
+              Список собирается напрямую из ингредиентов рецептов, добавь ручные позиции ниже при необходимости.
             </div>
             <div className="flex gap-2">
               <button className="btn-secondary" onClick={() => setPreviewOpen(false)}>

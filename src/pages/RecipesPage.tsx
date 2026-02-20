@@ -4,12 +4,25 @@ import Modal from "../components/Modal";
 import { createAt, removeAt, updateAt } from "../lib/db";
 import { useList } from "../lib/hooks";
 import { nowTs } from "../lib/utils";
-import { Recipe, RecipeIngredient } from "../types";
+import { CATALOG_SECTIONS, Recipe, RecipeIngredient } from "../types";
 import { nanoid } from "nanoid";
 
 function emptyRecipe(): Omit<Recipe, "id"> {
   const ts = nowTs();
   return { name: "", glass: "", method: "", notes: "", tags: [], ingredients: [], createdAt: ts, updatedAt: ts };
+}
+
+function normalizeIngredients(items: RecipeIngredient[] | undefined): RecipeIngredient[] {
+  const used = new Set<string>();
+  return (items ?? []).map((item) => {
+    const baseId = typeof item.id === "string" ? item.id : "";
+    let id = baseId.trim();
+    if (!id || used.has(id)) {
+      id = nanoid();
+    }
+    used.add(id);
+    return { ...item, id };
+  });
 }
 
 export default function RecipesPage() {
@@ -18,6 +31,8 @@ export default function RecipesPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Recipe | null>(null);
   const [draft, setDraft] = useState<Omit<Recipe, "id">>(emptyRecipe());
+  const [tagsInput, setTagsInput] = useState("");
+  const [qtyInputById, setQtyInputById] = useState<Record<string, string>>({});
 
   const filtered = useMemo(() => {
     const qq = q.trim().toLowerCase();
@@ -29,18 +44,30 @@ export default function RecipesPage() {
   function openCreate() {
     setEditing(null);
     setDraft(emptyRecipe());
+    setTagsInput("");
+    setQtyInputById({});
     setOpen(true);
   }
 
   function openEdit(r: Recipe) {
     setEditing(r);
-    setDraft({ ...r, id: undefined } as any);
+    const { id: _id, ingredients, tags, ...next } = r;
+    const normalizedIngredients = normalizeIngredients(ingredients);
+    setDraft({ ...next, tags, ingredients: normalizedIngredients });
+    setTagsInput((tags ?? []).join(", "));
+    setQtyInputById(Object.fromEntries(normalizedIngredients.map((item) => [item.id, String(item.qty)])));
     setOpen(true);
   }
 
   async function save() {
     const ts = nowTs();
-    const data = { ...draft, name: draft.name.trim(), updatedAt: ts };
+    const data = {
+      ...draft,
+      name: draft.name.trim(),
+      tags: tagsInput.split(",").map((x) => x.trim()).filter(Boolean),
+      ingredients: normalizeIngredients(draft.ingredients),
+      updatedAt: ts,
+    };
     if (!data.name) return alert("Название рецепта обязательно.");
     if (editing) {
       await updateAt(`/recipes/${editing.id}`, data);
@@ -56,8 +83,9 @@ export default function RecipesPage() {
   }
 
   function addIngredient() {
-    const ing: RecipeIngredient = { id: nanoid(), name: "", qty: 0, unit: "l", optional: false };
+    const ing: RecipeIngredient = { id: nanoid(), name: "", qty: 0, unit: "l", optional: false, section: "ingredients", shoppingTitle: "", purchaseUnitLabel: "", packSize: 0, brandsNote: "", url: "" };
     setDraft((d) => ({ ...d, ingredients: [...(d.ingredients ?? []), ing] }));
+    setQtyInputById((prev) => ({ ...prev, [ing.id]: "0" }));
   }
 
   function updateIngredient(id: string, patch: Partial<RecipeIngredient>) {
@@ -69,6 +97,18 @@ export default function RecipesPage() {
 
   function removeIngredient(id: string) {
     setDraft((d) => ({ ...d, ingredients: (d.ingredients ?? []).filter((x) => x.id !== id) }));
+    setQtyInputById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
+  function onQtyInputChange(id: string, raw: string) {
+    if (!/^[0-9]*([.,][0-9]*)?$/.test(raw)) return;
+    setQtyInputById((prev) => ({ ...prev, [id]: raw }));
+    if (raw === "" || raw.endsWith(".") || raw.endsWith(",")) return;
+    updateIngredient(id, { qty: Number(raw.replace(",", ".")) || 0 });
   }
 
   return (
@@ -174,8 +214,8 @@ export default function RecipesPage() {
             <div className="label">Теги (через запятую)</div>
             <input
               className="input"
-              value={(draft.tags ?? []).join(", ")}
-              onChange={(e) => setDraft((d) => ({ ...d, tags: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) }))}
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
               placeholder="классика, шот, лимонадник..."
             />
           </div>
@@ -197,33 +237,66 @@ export default function RecipesPage() {
 
         <div className="mt-3 grid gap-2">
           {(draft.ingredients ?? []).map((i) => (
-            <div key={i.id} className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-3 md:grid-cols-[1fr_120px_90px_110px_auto] md:items-end">
-              <div>
-                <div className="label">Ингредиент</div>
-                <input className="input" value={i.name} onChange={(e) => updateIngredient(i.id, { name: e.target.value })} placeholder="Например: Джин сухой" />
+            <div key={i.id} className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-3">
+              <div className="grid gap-2 md:grid-cols-[1fr_120px_90px_140px_auto] md:items-end">
+                <div>
+                  <div className="label">Ингредиент</div>
+                  <input className="input" value={i.name} onChange={(e) => updateIngredient(i.id, { name: e.target.value })} placeholder="Например: Джин сухой" />
+                </div>
+                <div>
+                  <div className="label">qty</div>
+                  <input className="input" inputMode="decimal" value={qtyInputById[i.id] ?? String(i.qty)} onChange={(e) => onQtyInputChange(i.id, e.target.value)} />
+                </div>
+                <div>
+                  <div className="label">unit</div>
+                  <select className="input" value={i.unit} onChange={(e) => updateIngredient(i.id, { unit: e.target.value as any })}>
+                    <option value="l">l</option>
+                    <option value="kg">kg</option>
+                    <option value="pcs">pcs</option>
+                    <option value="ml">ml</option>
+                    <option value="g">g</option>
+                    <option value="unit">unit</option>
+                  </select>
+                </div>
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" checked={!!i.optional} onChange={(e) => updateIngredient(i.id, { optional: e.target.checked })} />
+                  опционально
+                </label>
+                <button className="btn-secondary" onClick={() => removeIngredient(i.id)}>
+                  Удалить
+                </button>
               </div>
-              <div>
-                <div className="label">qty</div>
-                <input className="input" inputMode="decimal" value={String(i.qty)} onChange={(e) => updateIngredient(i.id, { qty: Number(e.target.value.replace(",", ".")) || 0 })} />
+
+              <div className="grid gap-2 md:grid-cols-2">
+                <div>
+                  <div className="label">Категория закупки</div>
+                  <select className="input" value={i.section ?? "ingredients"} onChange={(e) => updateIngredient(i.id, { section: e.target.value as any })}>
+                    {CATALOG_SECTIONS.map((s) => (
+                      <option key={s.key} value={s.key}>{s.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <div className="label">Название в списке закупки</div>
+                  <input className="input" value={i.shoppingTitle ?? ""} onChange={(e) => updateIngredient(i.id, { shoppingTitle: e.target.value })} placeholder="Если пусто — возьмется имя ингредиента" />
+                </div>
+                <div>
+                  <div className="label">Единица закупки (бут., шт., пачка...)</div>
+                  <input className="input" value={i.purchaseUnitLabel ?? ""} onChange={(e) => updateIngredient(i.id, { purchaseUnitLabel: e.target.value })} placeholder="Если пусто — по unit" />
+                </div>
+                <div>
+                  <div className="label">Округление packSize (0 = нет)</div>
+                  <input className="input" inputMode="decimal" value={String(i.packSize ?? 0)} onChange={(e) => updateIngredient(i.id, { packSize: Number(e.target.value.replace(",", ".")) || 0 })} />
+                </div>
+                <div>
+                  <div className="label">Марки/бренды (курсивом)</div>
+                  <input className="input" value={i.brandsNote ?? ""} onChange={(e) => updateIngredient(i.id, { brandsNote: e.target.value })} />
+                </div>
+                <div>
+                  <div className="label">Ссылка на товар</div>
+                  <input className="input" value={i.url ?? ""} onChange={(e) => updateIngredient(i.id, { url: e.target.value })} placeholder="https://..." />
+                </div>
               </div>
-              <div>
-                <div className="label">unit</div>
-                <select className="input" value={i.unit} onChange={(e) => updateIngredient(i.id, { unit: e.target.value as any })}>
-                  <option value="l">l</option>
-                  <option value="kg">kg</option>
-                  <option value="pcs">pcs</option>
-                  <option value="ml">ml</option>
-                  <option value="g">g</option>
-                  <option value="unit">unit</option>
-                </select>
-              </div>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" checked={!!i.optional} onChange={(e) => updateIngredient(i.id, { optional: e.target.checked })} />
-                опционально
-              </label>
-              <button className="btn-secondary" onClick={() => removeIngredient(i.id)}>
-                Удалить
-              </button>
             </div>
           ))}
           {!draft.ingredients?.length ? <div className="text-sm text-slate-500">Пока пусто. Добавь ингредиенты.</div> : null}

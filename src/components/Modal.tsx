@@ -27,14 +27,14 @@ export default function Modal({
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="absolute left-1/2 top-1/2 w-[min(720px,92vw)] -translate-x-1/2 -translate-y-1/2">
-        <div className="card overflow-hidden">
+        <div className="card flex max-h-[90vh] flex-col overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
             <div className="text-base font-extrabold text-slate-900">{title}</div>
             <button className="btn-secondary" onClick={onClose}>
               Закрыть
             </button>
           </div>
-          <div className="px-5 py-4">{children}</div>
+          <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
           {footer ? <div className="border-t border-slate-100 px-5 py-4">{footer}</div> : null}
         </div>
       </div>

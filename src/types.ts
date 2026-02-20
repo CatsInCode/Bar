@@ -27,6 +27,18 @@ export type RecipeIngredient = {
   qty: number; // кол-во на 1 порцию/батч (как заведёшь в рецепте)
   unit: IngredientUnit;
   optional?: boolean; // гарнир/опционально
+  /** Категория для WhatsApp-списка закупки. */
+  section?: CatalogSection;
+  /** Название для вывода в списке закупки (если отличается от name). */
+  shoppingTitle?: string;
+  /** Единица закупки для вывода (бут., л., шт., пачка). */
+  purchaseUnitLabel?: string;
+  /** Размер одной закупочной единицы для округления (например 1 л). */
+  packSize?: number;
+  /** Подсказки по брендам в курсиве. */
+  brandsNote?: string;
+  /** Ссылка на товар. */
+  url?: string;
 };
 
 export type Recipe = {

@@ -44,7 +44,8 @@ export default function CatalogPage() {
   }
   function openEdit(it: CatalogItem) {
     setEditing(it);
-    setDraft({ ...it, id: undefined } as any);
+    const { id: _id, ...next } = it;
+    setDraft(next);
     setOpen(true);
   }
 

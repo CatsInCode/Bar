@@ -5,7 +5,7 @@ import { createAt, removeAt, updateAt } from "../lib/db";
 import { useList } from "../lib/hooks";
 import { nowTs } from "../lib/utils";
 import { buildWhatsAppShoppingText } from "../lib/whatsapp";
-import { CatalogItem, Event, Order, OrderStatus, Recipe } from "../types";
+import { Event, Order, OrderStatus, Recipe } from "../types";
 
 function emptyOrder(): Omit<Order, "id"> {
   const ts = nowTs();
@@ -40,7 +40,6 @@ export default function OrdersPage() {
   const { items: orders } = useList<Order>("/orders");
   const { items: events } = useList<Event>("/events");
   const { items: recipes } = useList<Recipe>("/recipes");
-  const { items: catalog } = useList<CatalogItem>("/catalog");
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Order | null>(null);
@@ -67,7 +66,8 @@ export default function OrdersPage() {
   }
   function openEdit(o: Order) {
     setEditing(o);
-    setDraft({ ...o, id: undefined } as any);
+    const { id: _id, ...next } = o;
+    setDraft(next);
     setOpen(true);
   }
 
@@ -92,7 +92,7 @@ export default function OrdersPage() {
       setWhatsOpen(true);
       return;
     }
-    const txt = buildWhatsAppShoppingText({ event: ev, recipes, catalog, includeOptional: true });
+    const txt = buildWhatsAppShoppingText({ event: ev, recipes, includeOptional: true });
     setWhatsText(txt);
     setWhatsOpen(true);
   }
